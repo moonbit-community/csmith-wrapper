@@ -1,0 +1,79 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/csmith_wrapper/csmith_fuzz"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub const DEFAULT_COUNT : Int = 20
+
+pub const DEFAULT_SEED : Int = 7
+
+pub fn config_from_specs(String, Array[String]) -> Config raise WrapperError
+
+pub fn default_compiler_specs() -> Array[String]
+
+pub fn default_reference_spec() -> String
+
+pub fn format_failures(Array[String]) -> String
+
+pub fn parse_command_line(String) -> CommandLine raise WrapperError
+
+pub fn parse_compiler_spec(String) -> ShellCompiler raise WrapperError
+
+pub async fn require_toolchain(Config) -> Unit
+
+pub async fn run_batch(Config, Int, Int) -> BatchResult
+
+// Errors
+pub(all) suberror WrapperError {
+  MissingOption(String)
+  InvalidIntOption(String, String)
+  NegativeCount(Int)
+  EmptyCompilerCommand(String)
+  NoCompilers
+  MissingIncludeRoot(String)
+  CommandFailed(String, Int)
+  AbnormalCases(Array[String])
+} derive(@debug.Debug)
+pub impl Show for WrapperError
+
+// Types and methods
+pub(all) struct BatchResult {
+  failures : Array[String]
+}
+
+pub(all) struct CommandLine {
+  program : String
+  args : Array[String]
+} derive(ToJson, @json.FromJson)
+pub impl Show for CommandLine
+
+pub(all) struct Config {
+  csmith_command : CommandLine
+  include_root : String?
+  record_root : String
+  bug_dir : String
+  reference : ShellCompiler
+  compilers : Array[ShellCompiler]
+}
+
+pub(all) struct ShellCompiler {
+  name : String
+  command : CommandLine
+  kind : String
+} derive(ToJson, @json.FromJson)
+pub impl Compiler for ShellCompiler
+
+// Type aliases
+
+// Traits
+pub trait Compiler {
+  fn name(Self) -> String
+  fn slug(Self) -> String
+  fn preprocess_command(Self, String, String, String, String) -> CommandLine
+  fn compile_command(Self, String, String) -> CommandLine
+}
+
