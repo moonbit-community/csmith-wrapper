@@ -16,7 +16,6 @@ pub(all) struct CommandLine {
 pub(all) struct ShellCompiler {
   name : String
   command : CommandLine
-  kind : String
 } derive(ToJson, FromJson)
 
 ///|
@@ -42,17 +41,10 @@ pub impl Compiler for ShellCompiler with fn preprocess_command(
   preprocessed_path,
   compat_path,
 ) {
-  if self.kind == "kimicc" {
-    self.command.append([
-      "-E", "-DCSMITH_MINIMAL", "-I", include_dir, "-include", compat_path, source_path,
-      "-o", preprocessed_path,
-    ])
-  } else {
-    self.command.append([
-      "-w", "-E", "-P", "-DCSMITH_MINIMAL", "-I", include_dir, "-include", compat_path,
-      source_path, "-o", preprocessed_path,
-    ])
-  }
+  self.command.append([
+    "-w", "-E", "-P", "-DCSMITH_MINIMAL", "-I", include_dir, "-include", compat_path,
+    source_path, "-o", preprocessed_path,
+  ])
 }
 
 ///|
@@ -61,16 +53,14 @@ pub impl Compiler for ShellCompiler with fn compile_command(
   preprocessed_path,
   output_path,
 ) {
-  if self.kind == "kimicc" {
-    self.command.append(["--preprocessed", preprocessed_path, "-o", output_path])
-  } else {
-    self.command.append(["-w", "-o", output_path, preprocessed_path])
-  }
+  self.command.append(["-w", "-o", output_path, preprocessed_path])
 }
 
 ///|
 pub fn parse_compiler_spec(spec : String) -> ShellCompiler raise WrapperError {
-  parse_compiler_spec_with_default(spec, "c")
+  let (name, command_spec) = split_spec_name(spec)
+  let command = parse_command_line(command_spec)
+  { name: name.unwrap_or(default_compiler_name(command)), command }
 }
 
 ///|
@@ -90,7 +80,7 @@ pub fn parse_command_line(spec : String) -> CommandLine raise WrapperError {
 pub fn default_reference_spec() -> String {
   match env("CSMITH_WRAPPER_REFERENCE") {
     Some(spec) => spec
-    None => "clang=c:\{env("KIMICC_CSMITH_CLANG").unwrap_or("clang")}"
+    None => "clang=clang"
   }
 }
 
@@ -98,22 +88,8 @@ pub fn default_reference_spec() -> String {
 pub fn default_compiler_specs() -> Array[String] {
   match env("CSMITH_WRAPPER_COMPILERS") {
     Some(specs) => split_non_empty(specs, ";")
-    None =>
-      [
-        "kimicc=kimicc:\{env("KIMICC_CSMITH_KIMICC").unwrap_or("moon -C .. run cmd/main --target native --")}",
-      ]
+    None => []
   }
-}
-
-///|
-fn parse_compiler_spec_with_default(
-  spec : String,
-  default_kind : String,
-) -> ShellCompiler raise WrapperError {
-  let (name, rest) = split_spec_name(spec)
-  let (kind, command_spec) = split_spec_kind(rest, default_kind)
-  let command = parse_command_line(command_spec)
-  { name: name.unwrap_or(default_compiler_name(kind, command)), command, kind }
 }
 
 ///|
@@ -133,34 +109,12 @@ fn split_spec_name(spec : String) -> (String?, String) {
 }
 
 ///|
-fn split_spec_kind(spec : String, default_kind : String) -> (String, String) {
-  match spec.split_once(":") {
-    Some((kind, command)) => {
-      let kind = kind.trim()
-      let command = command.trim()
-      if kind == "kimicc" {
-        ("kimicc", command.to_owned())
-      } else if kind == "c" || kind == "cc" || kind == "clang" || kind == "gcc" {
-        ("c", command.to_owned())
-      } else {
-        (default_kind, spec.trim().to_owned())
-      }
-    }
-    None => (default_kind, spec.trim().to_owned())
-  }
-}
-
-///|
-fn default_compiler_name(kind : String, command : CommandLine) -> String {
-  if kind == "kimicc" {
-    "kimicc"
+fn default_compiler_name(command : CommandLine) -> String {
+  let name = last_path_segment(command.program)
+  if name == "" {
+    "compiler"
   } else {
-    let name = last_path_segment(command.program)
-    if name == "" {
-      "compiler"
-    } else {
-      name
-    }
+    name
   }
 }
 

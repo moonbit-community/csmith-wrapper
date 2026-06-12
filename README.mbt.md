@@ -22,7 +22,6 @@ The default commands are:
 
 - `csmith`, used to generate random C programs.
 - `clang`, used as the reference compiler.
-- `moon`, used by the default kimicc compiler command.
 
 Set the Csmith include directory explicitly. For a Homebrew install on Apple
 Silicon this is usually:
@@ -36,21 +35,19 @@ export CSMITH_WRAPPER_INCLUDE_ROOT=/opt/homebrew/opt/csmith/include/csmith-2.3.0
 Compiler specs have this form:
 
 ```text
-name=kind:command
+name=command
 ```
 
-`kind` is optional and defaults to `c`. Supported kinds:
-
-- `c`: clang/gcc-like driver. Preprocess with `-E -P`, compile with `-w -o`.
-- `kimicc`: kimicc-like driver. Preprocess with `-E`, compile with
-  `--preprocessed`.
+`name=` is optional. When omitted, the wrapper uses the last path segment of the
+command program. Every compiler command is treated as an ordinary C compiler
+driver: preprocess with `-w -E -P`, compile with `-w -o`.
 
 Examples:
 
 ```text
-clang=c:clang
-gcc=c:gcc-15
-kimicc=kimicc:moon -C .. run cmd/main --target native --
+clang=clang
+gcc=gcc-15
+/opt/toolchain/bin/cc -O2
 ```
 
 The command portion is split into `program + argv` and passed directly to
@@ -75,7 +72,7 @@ Runtime mismatch logs include the seed, reference checksum, and compiler
 checksum, for example:
 
 ```text
-csmith csmith_fuzz_0 seed=209 mismatch reference=clang compiler=kimicc reference-checksum=6a43d8cf compiler-checksum=6a409c84
+csmith csmith_fuzz_0 seed=209 mismatch reference=clang compiler=candidate reference-checksum=6a43d8cf compiler-checksum=6a409c84
 ```
 
 ## Standalone Runner
@@ -90,11 +87,10 @@ moon -C csmith_wrapper build --target native
 Run the standalone fuzzer directly when you want streaming logs:
 
 ```sh
-export KIMICC_BIN="$PWD/_build/native/debug/build/cmd/main/main.exe"
 csmith_wrapper/_build/native/debug/build/cmd/main/main.exe \
-  --reference "clang=c:clang" \
-  --compiler "kimicc=kimicc:$KIMICC_BIN" \
-  --compiler "system-clang=c:clang" \
+  --reference "clang=clang" \
+  --compiler "candidate=/path/to/c-compiler" \
+  --compiler "system-clang=clang" \
   --seed 7 \
   --count 20
 ```
@@ -111,8 +107,8 @@ You can also run it through `moon`:
 
 ```sh
 moon -C csmith_wrapper run cmd/main --target native -- \
-  --reference "clang=c:clang" \
-  --compiler "kimicc=kimicc:moon -C .. run cmd/main --target native --" \
+  --reference "clang=clang" \
+  --compiler "candidate=/path/to/c-compiler" \
   --seed 7 \
   --count 20
 ```
@@ -155,7 +151,7 @@ stdout, checksums, and saved bug-case paths.
 
 - `CSMITH_WRAPPER_CSMITH`: Csmith command. Default: `csmith`.
 - `CSMITH_WRAPPER_REFERENCE`: reference compiler spec. Default:
-  `clang=c:clang`.
+  `clang=clang`.
 - `CSMITH_WRAPPER_COMPILERS`: semicolon-separated compiler specs used when
   `--compiler` is not passed.
 - `CSMITH_WRAPPER_INCLUDE_ROOT`: directory containing `csmith.h`.
@@ -163,20 +159,17 @@ stdout, checksums, and saved bug-case paths.
 - `CSMITH_WRAPPER_BUG_DIR`: directory for saved abnormal cases. Default:
   `test/bugs`.
 
-The old `KIMICC_CSMITH_*` variables are still accepted as fallbacks for the
-default kimicc workflow.
-
 ## Manual Reproduction
 
-To compile a saved bug with kimicc and compare it with clang:
+To compile a saved bug with a candidate compiler and compare it with clang:
 
 ```sh
-moon build --target native
+candidate=/path/to/c-compiler
 
-case_c=test/bugs/csmith_seed_209_compiler_0_kimicc_runtime_mismatch.c
+case_c=test/bugs/csmith_seed_209_compiler_0_candidate_runtime_mismatch.c
 
-_build/native/debug/build/cmd/main/main.exe --preprocessed "$case_c" -o /tmp/kimicc_bug
-/tmp/kimicc_bug
+"$candidate" -w -o /tmp/candidate_bug "$case_c"
+/tmp/candidate_bug
 
 record_dir=$TMPDIR/csmith_wrapper_records/csmith_fuzz_0_209
 clang -w -o /tmp/clang_bug "$record_dir/reference_clang_preprocessed.i"

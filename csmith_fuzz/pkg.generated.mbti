@@ -63,7 +63,6 @@ pub(all) struct Config {
 pub(all) struct ShellCompiler {
   name : String
   command : CommandLine
-  kind : String
 } derive(ToJson, @json.FromJson)
 pub impl Compiler for ShellCompiler
 

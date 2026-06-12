@@ -15,19 +15,12 @@ pub fn config_from_specs(
   }
   {
     csmith_command: parse_command_line(
-      env("CSMITH_WRAPPER_CSMITH").unwrap_or(
-        env("KIMICC_CSMITH").unwrap_or("csmith"),
-      ),
+      env("CSMITH_WRAPPER_CSMITH").unwrap_or("csmith"),
     ),
-    include_root: match env("CSMITH_WRAPPER_INCLUDE_ROOT") {
-      Some(root) => Some(root)
-      None => env("KIMICC_CSMITH_INCLUDE_ROOT")
-    },
+    include_root: env("CSMITH_WRAPPER_INCLUDE_ROOT"),
     record_root: default_record_root(),
-    bug_dir: env("CSMITH_WRAPPER_BUG_DIR").unwrap_or(
-      env("KIMICC_CSMITH_BUG_DIR").unwrap_or("test/bugs"),
-    ),
-    reference: parse_compiler_spec_with_default(reference_spec, "c"),
+    bug_dir: env("CSMITH_WRAPPER_BUG_DIR").unwrap_or("test/bugs"),
+    reference: parse_compiler_spec(reference_spec),
     compilers,
   }
 }
@@ -35,12 +28,10 @@ pub fn config_from_specs(
 ///|
 fn default_record_root() -> String {
   env("CSMITH_WRAPPER_RECORD_ROOT").unwrap_or(
-    env("KIMICC_CSMITH_RECORD_ROOT").unwrap_or(
-      match env("TMPDIR") {
-        Some(tmp) => @path.Path::join(tmp, "csmith_wrapper_records").to_string()
-        None => ".csmith_wrapper_records"
-      },
-    ),
+    match env("TMPDIR") {
+      Some(tmp) => @path.Path::join(tmp, "csmith_wrapper_records").to_string()
+      None => ".csmith_wrapper_records"
+    },
   )
 }
 
