@@ -77,22 +77,6 @@ pub fn parse_command_line(spec : String) -> CommandLine raise WrapperError {
 }
 
 ///|
-pub fn default_reference_spec() -> String {
-  match env("CSMITH_WRAPPER_REFERENCE") {
-    Some(spec) => spec
-    None => "clang=clang"
-  }
-}
-
-///|
-pub fn default_compiler_specs() -> Array[String] {
-  match env("CSMITH_WRAPPER_COMPILERS") {
-    Some(specs) => split_non_empty(specs, ";")
-    None => []
-  }
-}
-
-///|
 fn split_spec_name(spec : String) -> (String?, String) {
   match spec.split_once("=") {
     Some((left, right)) => {
@@ -198,13 +182,5 @@ fn slugify(value : String) -> String {
     "compiler"
   } else {
     slug
-  }
-}
-
-///|
-fn env(name : String) -> String? {
-  match @env.get_env_var(name) {
-    None | Some("") => None
-    x => x
   }
 }

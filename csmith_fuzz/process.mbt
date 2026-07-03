@@ -25,6 +25,14 @@ async fn[T : ToJson + FromJson] write_json_file(
 }
 
 ///|
+fn tmp_root() -> String {
+  match @env.get_env_var("TMPDIR") {
+    Some(dir) if dir != "" => dir
+    _ => "/tmp"
+  }
+}
+
+///|
 async fn run_command_checked_timed(
   cmd : CommandLine,
   timeout_seconds : Int,
@@ -91,8 +99,5 @@ fn source_id(source : String) -> String {
 
 ///|
 fn temp_file_path(prefix : String, seed : String, suffix : String) -> String {
-  @path.Path::join(
-    env("TMPDIR").unwrap_or("."),
-    "csmith_\{prefix}_\{source_id(seed)}\{suffix}",
-  ).to_string()
+  @path.Path::join(tmp_root(), "csmith_\{prefix}_\{source_id(seed)}\{suffix}").to_string()
 }

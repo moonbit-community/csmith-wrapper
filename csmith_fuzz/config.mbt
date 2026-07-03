@@ -17,31 +17,14 @@ pub fn config_from_specs(
     raise NoCompilers
   }
   {
-    csmith_command: parse_command_line(
-      env("CSMITH_WRAPPER_CSMITH").unwrap_or("csmith"),
-    ),
+    csmith_command: parse_command_line("csmith"),
     include_root,
-    record_root: default_record_root(),
+    record_root: @path.Path::join(tmp_root(), "csmith_wrapper_records").to_string(),
     counterexample_dir,
     continue_on_error,
     reference: parse_compiler_spec(reference_spec),
     compilers,
   }
-}
-
-///|
-pub fn default_counterexample_dir() -> String? {
-  Some(env("CSMITH_WRAPPER_COUNTEREXAMPLE_DIR").unwrap_or("test/bugs"))
-}
-
-///|
-fn default_record_root() -> String {
-  env("CSMITH_WRAPPER_RECORD_ROOT").unwrap_or(
-    match env("TMPDIR") {
-      Some(tmp) => @path.Path::join(tmp, "csmith_wrapper_records").to_string()
-      None => ".csmith_wrapper_records"
-    },
-  )
 }
 
 ///|

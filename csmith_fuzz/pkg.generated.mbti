@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "bobzhang/csmith_wrapper/csmith_fuzz"
+package "CAIMEOX/csmith_wrapper/csmith_fuzz"
 
 import {
   "moonbitlang/core/debug",
@@ -12,12 +12,6 @@ pub const DEFAULT_COUNT : Int = 20
 pub const DEFAULT_SEED : Int = 7
 
 pub fn config_from_specs(String, Array[String], String, String?, Bool) -> Config raise WrapperError
-
-pub fn default_compiler_specs() -> Array[String]
-
-pub fn default_counterexample_dir() -> String?
-
-pub fn default_reference_spec() -> String
 
 pub fn format_failures(Array[String]) -> String
 

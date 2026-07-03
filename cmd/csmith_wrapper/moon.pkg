@@ -1,5 +1,5 @@
 import {
-  "bobzhang/csmith_wrapper/csmith_fuzz" @fuzz,
+  "CAIMEOX/csmith_wrapper/csmith_fuzz" @fuzz,
   "moonbitlang/core/argparse",
   "moonbitlang/core/string",
   "moonbitlang/async",

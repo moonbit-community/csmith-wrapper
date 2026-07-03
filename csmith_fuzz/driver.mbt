@@ -81,7 +81,7 @@ pub async fn run_batch(
   let failures : Array[String] = []
   for case_index in 0..<count {
     let seed = first_seed + case_index * 101
-    let tag = "csmith_fuzz_\{case_index}"
+    let tag = "[\{case_index}]"
     try {
       for failure in config.run_case(seed, tag) {
         failures.push(failure)

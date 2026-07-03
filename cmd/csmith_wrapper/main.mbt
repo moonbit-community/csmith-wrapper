@@ -31,14 +31,13 @@ fn command() -> @argparse.Command {
       @argparse.OptionArg(
         "reference",
         about="reference compiler spec",
-        default_values=[@fuzz.default_reference_spec()],
+        default_values=["clang=clang"],
         allow_hyphen_values=true,
       ),
       @argparse.OptionArg(
         "compiler",
         about="compiler spec to compare; repeat for multiple compilers",
         action=@argparse.Append,
-        default_values=@fuzz.default_compiler_specs(),
         allow_hyphen_values=true,
       ),
       @argparse.OptionArg(
@@ -106,10 +105,7 @@ async fn run() -> Unit {
   let counterexample_dir = if flag_value(matches, "no-save-counterexamples") {
     None
   } else {
-    match option_value_or_none(matches, "counterexample-dir") {
-      Some(path) => Some(path)
-      None => @fuzz.default_counterexample_dir()
-    }
+    option_value_or_none(matches, "counterexample-dir")
   }
   let config = @fuzz.config_from_specs(
     option_value(matches, "reference"),

@@ -20,7 +20,7 @@ test "config accepts multiple compiler specs" {
     "ref=clang",
     ["one=clang", "two=gcc-15 -O2"],
     "include/csmith",
-    default_counterexample_dir(),
+    Some("counterexamples"),
     false,
   )
   assert_eq(config.reference.name, "ref")
@@ -63,7 +63,7 @@ test "config accepts explicit include root and keep going mode" {
     "ref=clang",
     ["candidate=clang"],
     "include/csmith",
-    default_counterexample_dir(),
+    Some("counterexamples"),
     true,
   )
   assert_eq(config.include_root, "include/csmith")

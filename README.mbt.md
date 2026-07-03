@@ -146,6 +146,7 @@ the failing seed and do not want counterexample C files or abnormal-case records
 csmith_wrapper \
   --reference "clang=clang" \
   --compiler "candidate=/path/to/c-compiler" \
+  --include-root /path/to/csmith/include \
   --no-save-counterexamples \
   --continue-on-error \
   --seed 7 \
@@ -163,44 +164,29 @@ compile/preprocess failure.
 
 ## Outputs
 
-The default counterexample directory is:
+Counterexamples are saved only when `--counterexample-dir` is passed:
 
 ```text
-test/bugs
-```
-
-Counterexamples are saved as C files:
-
-```text
-test/bugs/csmith_seed_<seed>_<stage>.c
+<counterexample-dir>/csmith_seed_<seed>_<stage>.c
 ```
 
 When saving is enabled and the tested compiler reached compile or run, the saved
 file is that compiler's preprocessed input. For preprocess failures, the
 generated source is saved instead.
 
-The default record root is:
+The record root is:
 
 ```text
 $TMPDIR/csmith_wrapper_records
 ```
+
+If `TMPDIR` is unset, `/tmp` is used.
 
 Each record directory contains the original generated source, `compat.h`,
 pretty-printed `manifest.json`, per-abnormal `<stage>_failure.json` files, and
 the relevant per-compiler preprocessed inputs and stdout files. The JSON reports
 include commands, flags, timeouts, compiler metadata, exit codes, captured
 stdout, checksums, and saved counterexample paths.
-
-## Environment Variables
-
-- `CSMITH_WRAPPER_CSMITH`: Csmith command. Default: `csmith`.
-- `CSMITH_WRAPPER_REFERENCE`: reference compiler spec. Default:
-  `clang=clang`.
-- `CSMITH_WRAPPER_COMPILERS`: semicolon-separated compiler specs used when
-  `--compiler` is not passed.
-- `CSMITH_WRAPPER_RECORD_ROOT`: directory for full per-case records.
-- `CSMITH_WRAPPER_COUNTEREXAMPLE_DIR`: directory for saved counterexample C
-  files. Default: `test/bugs`.
 
 ## Manual Reproduction
 
@@ -210,12 +196,12 @@ clang:
 ```sh
 candidate=/path/to/c-compiler
 
-case_c=test/bugs/csmith_seed_209_compiler_0_candidate_runtime_mismatch.c
+case_c=counterexamples/csmith_seed_209_compiler_0_candidate_runtime_mismatch.c
 
 "$candidate" -w -o /tmp/candidate_bug "$case_c"
 /tmp/candidate_bug
 
-record_dir=$TMPDIR/csmith_wrapper_records/csmith_fuzz_0_209
+record_dir=${TMPDIR:-/tmp}/csmith_wrapper_records/csmith_fuzz_0_209
 clang -w -o /tmp/clang_bug "$record_dir/reference_clang_preprocessed.i"
 /tmp/clang_bug
 ```
