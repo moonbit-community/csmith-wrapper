@@ -16,17 +16,64 @@ test "parse unnamed compiler spec" {
 
 ///|
 test "config accepts multiple compiler specs" {
-  let config = config_from_specs("ref=clang", ["one=clang", "two=gcc-15 -O2"])
+  let config = config_from_specs(
+    "ref=clang",
+    ["one=clang", "two=gcc-15 -O2"],
+    "include/csmith",
+    default_counterexample_dir(),
+    false,
+  )
   assert_eq(config.reference.name, "ref")
+  assert_eq(config.include_root, "include/csmith")
   assert_eq(config.compilers.length(), 2)
   assert_eq(config.compilers[0].name, "one")
   assert_eq(config.compilers[1].name, "two")
 }
 
 ///|
+test "config accepts explicit counterexample directory" {
+  let config = config_from_specs(
+    "ref=clang",
+    ["candidate=clang"],
+    "include/csmith",
+    Some("counterexamples"),
+    false,
+  )
+  match config.counterexample_dir {
+    Some(dir) => assert_eq(dir, "counterexamples")
+    None => fail("expected counterexample directory")
+  }
+}
+
+///|
+test "config can disable counterexample saving" {
+  let config = config_from_specs(
+    "ref=clang",
+    ["candidate=clang"],
+    "include/csmith",
+    None,
+    false,
+  )
+  assert_true(config.counterexample_dir is None)
+}
+
+///|
+test "config accepts explicit include root and keep going mode" {
+  let config = config_from_specs(
+    "ref=clang",
+    ["candidate=clang"],
+    "include/csmith",
+    default_counterexample_dir(),
+    true,
+  )
+  assert_eq(config.include_root, "include/csmith")
+  assert_true(config.continue_on_error)
+}
+
+///|
 test "config rejects empty compiler list with typed error" {
   try {
-    let _ = config_from_specs("ref=clang", [])
+    let _ = config_from_specs("ref=clang", [], "include/csmith", None, false)
     fail("expected NoCompilers")
   } catch {
     NoCompilers => ()

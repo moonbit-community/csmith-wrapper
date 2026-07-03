@@ -17,12 +17,12 @@ priv struct ManifestReport[D] {
   stage : String
   csmith : CsmithReport
   timeouts : TimeoutReport
-  has_include_root : Bool
   include_root : String
   reference : ShellCompiler
   compilers : Array[ShellCompiler]
   record_root : String
-  bug_dir : String
+  counterexample_dir : String?
+  continue_on_error : Bool
   details : D
 } derive(ToJson, FromJson)
 
@@ -51,7 +51,7 @@ priv struct FailureReport {
 priv struct AbnormalReport[D] {
   stage : String
   compiler : String
-  bug_case : String
+  counterexample_path : String?
   details : D
 } derive(ToJson, FromJson)
 
@@ -148,10 +148,6 @@ async fn[D : ToJson + FromJson] CaseContext::write_common_record(
     compat_header_source(),
     create_mode=CreateOrTruncate,
   )
-  let (has_include_root, include_root) = match self.config.include_root {
-    Some(root) => (true, root)
-    None => (false, "")
-  }
   let manifest = ManifestReport::{
     tag: self.tag,
     seed: self.seed,
@@ -161,12 +157,12 @@ async fn[D : ToJson + FromJson] CaseContext::write_common_record(
       compile_seconds: COMPILE_TIMEOUT_SEC,
       run_seconds: RUN_TIMEOUT_SEC,
     },
-    has_include_root,
-    include_root,
+    include_root: self.config.include_root,
     reference: self.config.reference,
     compilers: self.config.compilers,
     record_root: self.config.record_root,
-    bug_dir: self.config.bug_dir,
+    counterexample_dir: self.config.counterexample_dir,
+    continue_on_error: self.config.continue_on_error,
     details,
   }
   write_json_file(
@@ -224,29 +220,46 @@ async fn[D : ToJson + FromJson] CaseContext::record_abnormal(
   bug_source_path : String,
   details : D,
 ) -> String {
-  ensure_dir(self.config.bug_dir)
-  let bug_path = @path.Path::join(
-    self.config.bug_dir,
-    "csmith_seed_\{self.seed}_\{stage_slug}.c",
-  ).to_string()
-  @fs.write_file(
-    bug_path,
-    @fs.read_file(bug_source_path).text(),
-    create_mode=CreateOrTruncate,
-  )
-  self.log("saved \{bug_path}")
+  let counterexample_path = match self.config.counterexample_dir {
+    Some(dir) => {
+      ensure_dir(dir)
+      let path = @path.Path::join(
+        dir,
+        "csmith_seed_\{self.seed}_\{stage_slug}.c",
+      ).to_string()
+      @fs.write_file(
+        path,
+        @fs.read_file(bug_source_path).text(),
+        create_mode=CreateOrTruncate,
+      )
+      self.log("saved \{path}")
+      Some(path)
+    }
+    None => {
+      self.log(
+        "counterexample seed=\{self.seed} compiler=\{compiler_name} not-saved",
+      )
+      None
+    }
+  }
   let report = AbnormalReport::{
     stage,
     compiler: compiler_name,
-    bug_case: bug_path,
+    counterexample_path,
     details,
   }
-  self.write_common_record(stage, report)
-  write_json_file(
-    @path.Path::join(self.record_dir, "\{stage_slug}_failure.json").to_string(),
-    report,
-  )
-  "\{stage} seed=\{self.seed} compiler=\{compiler_name} bug=\{bug_path} record=\{self.record_dir}"
+  match counterexample_path {
+    Some(path) => {
+      self.write_common_record(stage, report)
+      write_json_file(
+        @path.Path::join(self.record_dir, "\{stage_slug}_failure.json").to_string(),
+        report,
+      )
+      "\{stage} seed=\{self.seed} compiler=\{compiler_name} counterexample=\{path} record=\{self.record_dir}"
+    }
+    None =>
+      "\{stage} seed=\{self.seed} compiler=\{compiler_name} counterexample=not-saved"
+  }
 }
 
 ///|
@@ -323,8 +336,13 @@ async fn CaseContext::record_candidate_failure(
     failure.bug_source_path,
     details,
   )
-  self.record_run_artifact(reference)
-  self.record_failure_artifact(failure)
+  match self.config.counterexample_dir {
+    Some(_) => {
+      self.record_run_artifact(reference)
+      self.record_failure_artifact(failure)
+    }
+    None => ()
+  }
   failure_summary
 }
 
@@ -345,8 +363,13 @@ async fn CaseContext::record_candidate_timeout(
     candidate.preprocessed_path,
     details,
   )
-  self.record_run_artifact(reference)
-  self.record_run_artifact(candidate)
+  match self.config.counterexample_dir {
+    Some(_) => {
+      self.record_run_artifact(reference)
+      self.record_run_artifact(candidate)
+    }
+    None => ()
+  }
   failure
 }
 
@@ -369,8 +392,13 @@ async fn CaseContext::record_candidate_mismatch(
     candidate.preprocessed_path,
     details,
   )
-  self.record_run_artifact(reference)
-  self.record_run_artifact(candidate)
+  match self.config.counterexample_dir {
+    Some(_) => {
+      self.record_run_artifact(reference)
+      self.record_run_artifact(candidate)
+    }
+    None => ()
+  }
   failure
 }
 

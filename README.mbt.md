@@ -23,11 +23,10 @@ The default commands are:
 - `csmith`, used to generate random C programs.
 - `clang`, used as the reference compiler.
 
-Set the Csmith include directory explicitly. For a Homebrew install on Apple
-Silicon this is usually:
+Pass the directory containing `csmith.h` explicitly:
 
 ```sh
-export CSMITH_WRAPPER_INCLUDE_ROOT=/opt/homebrew/opt/csmith/include/csmith-2.3.0
+--include-root /path/to/csmith/include
 ```
 
 ## Compiler Specs
@@ -87,10 +86,12 @@ moon -C csmith_wrapper build --target native
 Run the standalone fuzzer directly when you want streaming logs:
 
 ```sh
-csmith_wrapper/_build/native/debug/build/cmd/main/main.exe \
+csmith_wrapper/_build/native/debug/build/cmd/csmith_wrapper/csmith_wrapper.exe \
   --reference "clang=clang" \
   --compiler "candidate=/path/to/c-compiler" \
   --compiler "system-clang=clang" \
+  --include-root /path/to/csmith/include \
+  --counterexample-dir counterexamples \
   --seed 7 \
   --count 20
 ```
@@ -106,12 +107,55 @@ seed_for_case = first_seed + case_index * 101
 You can also run it through `moon`:
 
 ```sh
-moon -C csmith_wrapper run cmd/main --target native -- \
+moon -C csmith_wrapper run cmd/csmith_wrapper --target native -- \
   --reference "clang=clang" \
   --compiler "candidate=/path/to/c-compiler" \
+  --include-root /path/to/csmith/include \
+  --counterexample-dir counterexamples \
   --seed 7 \
   --count 20
 ```
+
+## Install
+
+Install the CLI into Moon's binary directory:
+
+```sh
+moon -C csmith_wrapper install ./cmd/csmith_wrapper
+```
+
+This installs `csmith_wrapper` to `~/.moon/bin` by default. Use `--bin <dir>` to
+install it somewhere else.
+
+After installation:
+
+```sh
+csmith_wrapper \
+  --reference "clang=clang" \
+  --compiler "candidate=/path/to/c-compiler" \
+  --include-root /path/to/csmith/include \
+  --counterexample-dir counterexamples \
+  --seed 7 \
+  --count 20
+```
+
+Use `--no-save-counterexamples` when you only want the terminal output to report
+the failing seed and do not want counterexample C files or abnormal-case records:
+
+```sh
+csmith_wrapper \
+  --reference "clang=clang" \
+  --compiler "candidate=/path/to/c-compiler" \
+  --no-save-counterexamples \
+  --continue-on-error \
+  --seed 7 \
+  --count 20
+```
+
+`--continue-on-error` keeps the batch running after a per-seed wrapper error
+such as Csmith generation failure. Compiler failures, timeouts, and mismatches
+are already collected without stopping the batch. Global setup errors such as a
+missing Csmith include root remain fatal because no seed can run correctly.
 
 The process exits with code `0` if no abnormal case is found. It exits with code
 `1` after saving any mismatch, tested-compiler timeout, or tested-compiler
@@ -119,21 +163,21 @@ compile/preprocess failure.
 
 ## Outputs
 
-The default bug directory is:
+The default counterexample directory is:
 
 ```text
 test/bugs
 ```
 
-Abnormal cases are saved as C files:
+Counterexamples are saved as C files:
 
 ```text
 test/bugs/csmith_seed_<seed>_<stage>.c
 ```
 
-When the tested compiler reached compile or run, the saved file is that
-compiler's preprocessed input. For preprocess failures, the generated source is
-saved instead.
+When saving is enabled and the tested compiler reached compile or run, the saved
+file is that compiler's preprocessed input. For preprocess failures, the
+generated source is saved instead.
 
 The default record root is:
 
@@ -145,7 +189,7 @@ Each record directory contains the original generated source, `compat.h`,
 pretty-printed `manifest.json`, per-abnormal `<stage>_failure.json` files, and
 the relevant per-compiler preprocessed inputs and stdout files. The JSON reports
 include commands, flags, timeouts, compiler metadata, exit codes, captured
-stdout, checksums, and saved bug-case paths.
+stdout, checksums, and saved counterexample paths.
 
 ## Environment Variables
 
@@ -154,14 +198,14 @@ stdout, checksums, and saved bug-case paths.
   `clang=clang`.
 - `CSMITH_WRAPPER_COMPILERS`: semicolon-separated compiler specs used when
   `--compiler` is not passed.
-- `CSMITH_WRAPPER_INCLUDE_ROOT`: directory containing `csmith.h`.
 - `CSMITH_WRAPPER_RECORD_ROOT`: directory for full per-case records.
-- `CSMITH_WRAPPER_BUG_DIR`: directory for saved abnormal cases. Default:
-  `test/bugs`.
+- `CSMITH_WRAPPER_COUNTEREXAMPLE_DIR`: directory for saved counterexample C
+  files. Default: `test/bugs`.
 
 ## Manual Reproduction
 
-To compile a saved bug with a candidate compiler and compare it with clang:
+To compile a saved counterexample with a candidate compiler and compare it with
+clang:
 
 ```sh
 candidate=/path/to/c-compiler

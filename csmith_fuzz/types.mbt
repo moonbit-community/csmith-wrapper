@@ -1,9 +1,10 @@
 ///|
 pub(all) struct Config {
   csmith_command : CommandLine
-  include_root : String?
+  include_root : String
   record_root : String
-  bug_dir : String
+  counterexample_dir : String?
+  continue_on_error : Bool
   reference : ShellCompiler
   compilers : Array[ShellCompiler]
 }

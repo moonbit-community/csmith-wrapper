@@ -9,5 +9,6 @@
     "moonbitlang/x": "0.4.45"
   },
   "source": ".",
-  "preferred-target": "native"
+  "preferred-target": "native",
+  "supported-targets": "native"
 }

@@ -44,17 +44,13 @@ async fn[C : Compiler] CaseContext::execute_compiler(
   let run_dir = self.path("\{slug}_run", ".d")
   let source_path = self.path("source", ".c")
   let compat_path = self.path("compat", ".h")
-  let include_dir = match self.config.include_root {
-    Some(root) => root
-    None =>
-      raise MissingIncludeRoot(
-        "set CSMITH_WRAPPER_INCLUDE_ROOT to the directory containing csmith.h",
-      )
-  }
   let preprocess = self.capture_command(
     "\{name} preprocess",
     compiler.preprocess_command(
-      include_dir, source_path, preprocessed_path, compat_path,
+      self.config.include_root,
+      source_path,
+      preprocessed_path,
+      compat_path,
     ),
     COMPILE_TIMEOUT_SEC,
   )

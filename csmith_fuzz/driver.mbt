@@ -81,8 +81,22 @@ pub async fn run_batch(
   let failures : Array[String] = []
   for case_index in 0..<count {
     let seed = first_seed + case_index * 101
-    for failure in config.run_case(seed, "csmith_fuzz_\{case_index}") {
-      failures.push(failure)
+    let tag = "csmith_fuzz_\{case_index}"
+    try {
+      for failure in config.run_case(seed, tag) {
+        failures.push(failure)
+      }
+    } catch {
+      err =>
+        if config.continue_on_error {
+          let summary = "wrapper error seed=\{seed} case=\{tag} error=\{err}"
+          @stdio.stderr.write(
+            "csmith \{tag} seed=\{seed} error=\{err}; continuing\n",
+          )
+          failures.push(summary)
+        } else {
+          raise err
+        }
     }
   }
   { failures, }

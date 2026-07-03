@@ -11,9 +11,11 @@ pub const DEFAULT_COUNT : Int = 20
 
 pub const DEFAULT_SEED : Int = 7
 
-pub fn config_from_specs(String, Array[String]) -> Config raise WrapperError
+pub fn config_from_specs(String, Array[String], String, String?, Bool) -> Config raise WrapperError
 
 pub fn default_compiler_specs() -> Array[String]
+
+pub fn default_counterexample_dir() -> String?
 
 pub fn default_reference_spec() -> String
 
@@ -53,9 +55,10 @@ pub impl Show for CommandLine
 
 pub(all) struct Config {
   csmith_command : CommandLine
-  include_root : String?
+  include_root : String
   record_root : String
-  bug_dir : String
+  counterexample_dir : String?
+  continue_on_error : Bool
   reference : ShellCompiler
   compilers : Array[ShellCompiler]
 }

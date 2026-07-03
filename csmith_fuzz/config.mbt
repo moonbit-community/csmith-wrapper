@@ -2,6 +2,9 @@
 pub fn config_from_specs(
   reference_spec : String,
   compiler_specs : Array[String],
+  include_root : String,
+  counterexample_dir : String?,
+  continue_on_error : Bool,
 ) -> Config raise WrapperError {
   let compilers : Array[ShellCompiler] = []
   for spec in compiler_specs {
@@ -17,12 +20,18 @@ pub fn config_from_specs(
     csmith_command: parse_command_line(
       env("CSMITH_WRAPPER_CSMITH").unwrap_or("csmith"),
     ),
-    include_root: env("CSMITH_WRAPPER_INCLUDE_ROOT"),
+    include_root,
     record_root: default_record_root(),
-    bug_dir: env("CSMITH_WRAPPER_BUG_DIR").unwrap_or("test/bugs"),
+    counterexample_dir,
+    continue_on_error,
     reference: parse_compiler_spec(reference_spec),
     compilers,
   }
+}
+
+///|
+pub fn default_counterexample_dir() -> String? {
+  Some(env("CSMITH_WRAPPER_COUNTEREXAMPLE_DIR").unwrap_or("test/bugs"))
 }
 
 ///|
@@ -37,14 +46,7 @@ fn default_record_root() -> String {
 
 ///|
 pub async fn require_toolchain(config : Config) -> Unit {
-  match config.include_root {
-    Some(include_dir) =>
-      if !@fs.exists(@path.Path::join(include_dir, "csmith.h").to_string()) {
-        raise MissingIncludeRoot(include_dir)
-      }
-    None =>
-      raise MissingIncludeRoot(
-        "set CSMITH_WRAPPER_INCLUDE_ROOT to the directory containing csmith.h",
-      )
+  if !@fs.exists(@path.Path::join(config.include_root, "csmith.h").to_string()) {
+    raise MissingIncludeRoot(config.include_root)
   }
 }
