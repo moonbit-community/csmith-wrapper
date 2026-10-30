@@ -20,7 +20,7 @@ fn csmith_flags() -> Array[String] {
 ///|
 fn Config::generate_command(
   self : Config,
-  seed : Int,
+  seed : Int32,
   source_path : String,
 ) -> CommandLine {
   self.csmith_command.append(

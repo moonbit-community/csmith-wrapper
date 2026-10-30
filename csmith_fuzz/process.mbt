@@ -7,7 +7,7 @@ async fn ensure_dir(path : String) -> Unit {
 
 ///|
 fn[T : ToJson + FromJson] stringify_report(value : T) -> String {
-  let json = value.to_json()
+  let json = Json(value)
   let _roundtrip : T = @json.from_json(json) catch { _ => value }
   json.stringify(indent=2)
 }
@@ -35,7 +35,7 @@ fn tmp_root() -> String {
 ///|
 async fn run_command_checked_timed(
   cmd : CommandLine,
-  timeout_seconds : Int,
+  timeout_seconds : Int32,
   context : String,
   cwd? : String,
 ) -> Unit {
@@ -48,9 +48,9 @@ async fn run_command_checked_timed(
 ///|
 async fn run_command_with_timeout(
   cmd : CommandLine,
-  timeout_seconds : Int,
+  timeout_seconds : Int32,
   cwd? : String,
-) -> Int {
+) -> Int32 {
   match
     @async.with_timeout_opt(timeout_seconds * 1000, () => {
       match cwd {
@@ -66,7 +66,7 @@ async fn run_command_with_timeout(
 ///|
 async fn run_command_capture(
   cmd : CommandLine,
-  timeout_seconds : Int,
+  timeout_seconds : Int32,
   cwd? : String,
 ) -> CommandResult {
   match
@@ -78,7 +78,7 @@ async fn run_command_capture(
       }
     }) {
     Some((rc, data)) =>
-      { code: rc, timed_out: timed_out(rc), output: data.text() }
+      { code: rc, timed_out: timed_out(rc), output: data.text(), }
     None =>
       {
         code: 124,

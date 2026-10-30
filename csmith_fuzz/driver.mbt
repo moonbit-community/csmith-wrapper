@@ -40,7 +40,7 @@ async fn CaseContext::compare_candidates(
 ///|
 async fn Config::run_case(
   self : Config,
-  seed : Int,
+  seed : Int32,
   tag : String,
 ) -> Array[String] {
   let case = {
@@ -74,8 +74,8 @@ async fn Config::run_case(
 ///|
 pub async fn run_batch(
   config : Config,
-  first_seed : Int,
-  count : Int,
+  first_seed : Int32,
+  count : Int32,
 ) -> BatchResult {
   require_toolchain(config)
   let failures : Array[String] = []
