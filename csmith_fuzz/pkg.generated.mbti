@@ -7,9 +7,9 @@ import {
 }
 
 // Values
-pub const DEFAULT_COUNT : Int = 20
+pub const DEFAULT_COUNT : Int32 = 20
 
-pub const DEFAULT_SEED : Int = 7
+pub const DEFAULT_SEED : Int32 = 7
 
 pub fn config_from_specs(String, Array[String], String, String?, Bool) -> Config raise WrapperError
 
@@ -21,19 +21,22 @@ pub fn parse_compiler_spec(String) -> ShellCompiler raise WrapperError
 
 pub async fn require_toolchain(Config) -> Unit
 
-pub async fn run_batch(Config, Int, Int) -> BatchResult
+pub async fn run_batch(Config, Int32, Int32) -> BatchResult
 
 // Errors
 pub(all) suberror WrapperError {
   MissingOption(String)
   InvalidIntOption(String, String)
-  NegativeCount(Int)
+  NegativeCount(Int32)
   EmptyCompilerCommand(String)
   NoCompilers
   MissingIncludeRoot(String)
-  CommandFailed(String, Int)
+  CommandFailed(String, Int32)
   AbnormalCases(Array[String])
 } derive(@debug.Debug)
+pub fn WrapperError::output(Self, &Logger) -> Unit
+pub fn WrapperError::to_repr(Self) -> @debug.Repr
+pub fn WrapperError::to_string(Self) -> String
 pub impl Show for WrapperError
 
 // Types and methods
@@ -45,6 +48,10 @@ pub(all) struct CommandLine {
   program : String
   args : Array[String]
 } derive(ToJson, @json.FromJson)
+pub fn CommandLine::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn CommandLine::output(Self, &Logger) -> Unit
+pub fn CommandLine::to_json(Self) -> Json
+pub fn CommandLine::to_string(Self) -> String
 pub impl Show for CommandLine
 
 pub(all) struct Config {
@@ -61,6 +68,12 @@ pub(all) struct ShellCompiler {
   name : String
   command : CommandLine
 } derive(ToJson, @json.FromJson)
+pub fn ShellCompiler::compile_command(Self, String, String) -> CommandLine
+pub fn ShellCompiler::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn ShellCompiler::name(Self) -> String
+pub fn ShellCompiler::preprocess_command(Self, String, String, String, String) -> CommandLine
+pub fn ShellCompiler::slug(Self) -> String
+pub fn ShellCompiler::to_json(Self) -> Json
 pub impl Compiler for ShellCompiler
 
 // Type aliases
@@ -72,4 +85,3 @@ pub trait Compiler {
   fn preprocess_command(Self, String, String, String, String) -> CommandLine
   fn compile_command(Self, String, String) -> CommandLine
 }
-

@@ -87,7 +87,7 @@ fn flag_value(matches : @argparse.Matches, name : String) -> Bool {
 }
 
 ///|
-fn int_option(matches : @argparse.Matches, name : String) -> Int raise {
+fn int_option(matches : @argparse.Matches, name : String) -> Int32 raise {
   let value = option_value(matches, name)
   @string.parse_int(value) catch {
     _ => raise @fuzz.InvalidIntOption(name, value)

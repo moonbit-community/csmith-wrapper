@@ -16,7 +16,7 @@ pub(all) struct BatchResult {
 
 ///|
 priv struct CommandResult {
-  code : Int
+  code : Int32
   timed_out : Bool
   output : String
 } derive(ToJson, FromJson)
@@ -24,7 +24,7 @@ priv struct CommandResult {
 ///|
 priv struct CaseContext {
   config : Config
-  seed : Int
+  seed : Int32
   tag : String
   prefix : String
   record_dir : String
@@ -56,13 +56,13 @@ priv enum CompilerOutcome {
 }
 
 ///|
-pub const DEFAULT_SEED : Int = 7
+pub const DEFAULT_SEED : Int32 = 7
 
 ///|
-pub const DEFAULT_COUNT : Int = 20
+pub const DEFAULT_COUNT : Int32 = 20
 
 ///|
-const COMPILE_TIMEOUT_SEC : Int = 30
+const COMPILE_TIMEOUT_SEC : Int32 = 30
 
 ///|
-const RUN_TIMEOUT_SEC : Int = 20
+const RUN_TIMEOUT_SEC : Int32 = 20

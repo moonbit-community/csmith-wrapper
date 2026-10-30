@@ -60,7 +60,7 @@ pub impl Compiler for ShellCompiler with fn compile_command(
 pub fn parse_compiler_spec(spec : String) -> ShellCompiler raise WrapperError {
   let (name, command_spec) = split_spec_name(spec)
   let command = parse_command_line(command_spec)
-  { name: name.unwrap_or(default_compiler_name(command)), command }
+  { name: name.unwrap_or(default_compiler_name(command)), command, }
 }
 
 ///|
@@ -73,7 +73,7 @@ pub fn parse_command_line(spec : String) -> CommandLine raise WrapperError {
   for index in 1..<words.length() {
     args.push(words[index])
   }
-  { program: words[0], args }
+  { program: words[0], args, }
 }
 
 ///|
@@ -108,12 +108,12 @@ fn CommandLine::append(
   extra : Array[String],
 ) -> CommandLine {
   let args : Array[String] = [..self.args, ..extra]
-  { program: self.program, args }
+  { program: self.program, args, }
 }
 
 ///|
 fn CommandLine::display(self : CommandLine) -> String {
-  let output = StringBuilder::new()
+  let output = StringBuilder()
   output.write_string(self.program)
   for arg in self.args {
     output.write_char(' ')
@@ -169,7 +169,7 @@ fn split_non_empty(input : String, sep : String) -> Array[String] {
 
 ///|
 fn slugify(value : String) -> String {
-  let buf = StringBuilder::new()
+  let buf = StringBuilder()
   for ch in value {
     if is_spec_name_char(ch) {
       buf.write_char(ch)

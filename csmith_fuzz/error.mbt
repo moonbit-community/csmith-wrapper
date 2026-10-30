@@ -2,11 +2,11 @@
 pub(all) suberror WrapperError {
   MissingOption(String)
   InvalidIntOption(String, String)
-  NegativeCount(Int)
+  NegativeCount(Int32)
   EmptyCompilerCommand(String)
   NoCompilers
   MissingIncludeRoot(String)
-  CommandFailed(String, Int)
+  CommandFailed(String, Int32)
   AbnormalCases(Array[String])
 } derive(Debug)
 

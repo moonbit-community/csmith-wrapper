@@ -6,14 +6,14 @@ priv struct CsmithReport {
 
 ///|
 priv struct TimeoutReport {
-  compile_seconds : Int
-  run_seconds : Int
+  compile_seconds : Int32
+  run_seconds : Int32
 } derive(ToJson, FromJson)
 
 ///|
 priv struct ManifestReport[D] {
   tag : String
-  seed : Int
+  seed : Int32
   stage : String
   csmith : CsmithReport
   timeouts : TimeoutReport
@@ -152,7 +152,7 @@ async fn[D : ToJson + FromJson] CaseContext::write_common_record(
     tag: self.tag,
     seed: self.seed,
     stage,
-    csmith: { command: self.config.csmith_command, flags: csmith_flags() },
+    csmith: { command: self.config.csmith_command, flags: csmith_flags(), },
     timeouts: {
       compile_seconds: COMPILE_TIMEOUT_SEC,
       run_seconds: RUN_TIMEOUT_SEC,
@@ -285,7 +285,7 @@ fn runtime_mismatch_report(
   let reference_checksum = output_checksum(reference.result.output)
   let candidate_checksum = output_checksum(candidate.result.output)
   let stage = "runtime mismatch reference=\{reference.name} compiler=\{candidate.name} reference-checksum=\{reference_checksum} compiler-checksum=\{candidate_checksum}"
-  let details = { reference: reference.report(), compiler: candidate.report() }
+  let details = { reference: reference.report(), compiler: candidate.report(), }
   (stage, details, reference_checksum, candidate_checksum)
 }
 
@@ -406,7 +406,7 @@ async fn CaseContext::record_candidate_mismatch(
 pub fn format_failures(failures : Array[String]) -> String {
   let cases : Array[AbnormalCaseSummary] = []
   for failure in failures {
-    cases.push({ summary: failure })
+    cases.push({ summary: failure, })
   }
-  stringify_report(AbnormalCasesReport::{ abnormal_cases: cases })
+  stringify_report(AbnormalCasesReport::{ abnormal_cases: cases, })
 }

@@ -1,5 +1,5 @@
 ///|
-fn timed_out(code : Int) -> Bool {
+fn timed_out(code : Int32) -> Bool {
   code == 124 || code == 137 || code == 143
 }
 
@@ -8,7 +8,7 @@ async fn CaseContext::capture_command(
   self : CaseContext,
   stage : String,
   command : CommandLine,
-  timeout : Int,
+  timeout : Int32,
   cwd? : String,
 ) -> CommandResult {
   self.log(stage)
@@ -25,7 +25,7 @@ async fn CaseContext::capture_binary(
   ensure_dir(run_dir)
   self.capture_command(
     stage,
-    { program: bin_path, args: [] },
+    { program: bin_path, args: [], },
     RUN_TIMEOUT_SEC,
     cwd=run_dir,
   )
@@ -92,5 +92,5 @@ async fn[C : Compiler] CaseContext::execute_compiler(
     })
   }
   let run = self.capture_binary("\{name} run", binary_path, run_dir)
-  CompilerOk({ name, slug, preprocessed_path, result: run })
+  CompilerOk({ name, slug, preprocessed_path, result: run, })
 }
